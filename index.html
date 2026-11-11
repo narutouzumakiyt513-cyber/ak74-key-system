@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ak-74 Hub | Key System</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #161b22;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { color: #58a6ff; margin-bottom: 5px; }
+        p { color: #8b949e; font-size: 14px; margin-bottom: 30px; }
+        .mission-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        .mission-btn:hover { background: #2ea043; }
+        .mission-btn:disabled {
+            background: #21262d;
+            color: #484f58;
+            cursor: not-allowed;
+        }
+        .key-box {
+            display: none;
+            background: #0d1117;
+            border: 1px solid #58a6ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .key-text {
+            color: #58a6ff;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Ak-74 Hub</h1>
+    <p>Complete as missões para gerar sua Key de 48 Horas</p>
+
+    <!-- ATENÇÃO: Substitua esses links abaixo pelos seus 3 links do Linkvertise -->
+    <button id="btn1" class="mission-btn" onclick="startMission(1, 'SEU_LINKVERTISE_1_AQUI')">Missão 1 (Pendente)</button>
+    <button id="btn2" class="mission-btn" onclick="startMission(2, 'SEU_LINKVERTISE_2_AQUI')" disabled>Missão 2 (Bloqueada)</button>
+    <button id="btn3" class="mission-btn" onclick="startMission(3, 'SEU_LINKVERTISE_3_AQUI')" disabled>Missão 3 (Bloqueada)</button>
+
+    <div id="keyContainer" class="key-box">
+        <p style="margin-bottom: 10px; color: white;">Sua Key (Válida por 48h):</p>
+        <div class="key-text" id="finalKey">GERANDO...</div>
+    </div>
+</div>
+
+<script>
+    // Gera um ID único para o usuário e salva no navegador dele
+    let userId = localStorage.getItem('ak74_user_id');
+    if (!userId) {
+        userId = Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('ak74_user_id', userId);
+    }
+
+    // Verifica se ele acabou de voltar do Linkvertise (O Linkvertise manda de volta com ?verify=X)
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyStep = urlParams.get('verify');
+
+    if (verifyStep) {
+        fetch(`/api/verify_mission?id=${userId}&mission=${verifyStep}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) alert(data.error);
+                window.location.href = "/"; // Limpa a URL
+            });
+    } else {
+        updateUI(); // Se não estiver voltando, só atualiza a tela
+    }
+
+    function startMission(missionNum, linkUrl) {
+        // Avisa o servidor que o usuário clicou (inicia o cronômetro anti-bypass)
+        fetch(`/api/start?id=${userId}`).then(() => {
+            window.open(linkUrl, '_blank'); // Abre o Linkvertise
+        });
+    }
+
+    function updateUI() {
+        fetch(`/api/status?id=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                const step = data.step;
+                
+                if (step >= 1) {
+                    document.getElementById('btn1').innerText = "Missão 1 (Concluída ✔)";
+                    document.getElementById('btn1').disabled = true;
+                    document.getElementById('btn2').disabled = false;
+                    document.getElementById('btn2').innerText = "Missão 2 (Pendente)";
+                }
+                if (step >= 2) {
+                    document.getElementById('btn2').innerText = "Missão 2 (Concluída ✔)";
+                    document.getElementById('btn2').disabled = true;
+                    document.getElementById('btn3').disabled = false;
+                    document.getElementById('btn3').innerText = "Missão 3 (Pendente)";
+                }
+                if (step >= 3) {
+                    document.getElementById('btn3').innerText = "Missão 3 (Concluída ✔)";
+                    document.getElementById('btn3').disabled = true;
+                    document.getElementById('keyContainer').style.display = "block";
+                    document.getElementById('finalKey').innerText = data.key;
+                }
+            });
+    }
+</script>
+
+</body>
+</html>
