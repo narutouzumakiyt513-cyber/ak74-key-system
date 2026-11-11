@@ -1,0 +1,13 @@
+{
+  "name": "ak74-key-system",
+  "version": "1.0.0",
+  "description": "Servidor do Key System do Ak-74 Hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
