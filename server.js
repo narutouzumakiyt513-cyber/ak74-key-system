@@ -54,29 +54,31 @@ app.get('/api/roblox_info', async (req, res) => {
         let username = query;
 
         if (type === 'username') {
-            const idRes = await fetch('https://users.roblox.com/v1/usernames/users', {
+            // Usando RoProxy para evitar o bloqueio do Cloudflare no Render
+            const idRes = await fetch('https://users.roproxy.com/v1/usernames/users', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ usernames: [query], excludeBannedUsers: false })
             });
             const idData = await idRes.json();
-            if (!idData.data || idData.data.length === 0) return res.json({ error: "Usuário não encontrado!" });
+            if (!idData.data || idData.data.length === 0) return res.json({ error: "Usuário não encontrado no Roblox!" });
             userId = idData.data[0].id;
             username = idData.data[0].name;
         } else {
-            const nameRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+            const nameRes = await fetch(`https://users.roproxy.com/v1/users/${userId}`);
             if (!nameRes.ok) return res.json({ error: "ID inválido!" });
             const nameData = await nameRes.json();
             username = nameData.name;
         }
 
-        const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
+        const avatarRes = await fetch(`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
         const avatarData = await avatarRes.json();
         const avatarUrl = avatarData.data[0].imageUrl;
 
         res.json({ success: true, id: userId, username: username, avatar: avatarUrl });
     } catch (err) {
-        res.json({ error: "Erro ao consultar a API do Roblox." });
+        console.error(err);
+        res.json({ error: "Erro na API. Tente buscar pelo ID numérico!" });
     }
 });
 
