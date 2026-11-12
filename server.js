@@ -1,81 +1,107 @@
 const express = require('express');
-const cors = require('cors');
-const crypto = require('crypto');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.static(__dirname));
 
-// Bancos de dados em memória
-const sessions = {}; // Controla em qual missão o usuário está e o anti-bypass
-const activeKeys = {}; // Guarda as chaves geradas e a data de expiração (48h)
+const sessions = {}; 
+const whitelist = {}; 
 
-// Entrega a página HTML (O Site)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// CONFIGURAÇÃO: 48 Horas em milissegundos
+const KEY_DURATION_48H = 48 * 60 * 60 * 1000; 
+
+// Rota para o UptimeRobot
+app.get('/ping', (req, res) => res.send('Render 48h Online'));
+
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+app.get('/api/status', (req, res) => {
+    const { id } = req.query;
+    if (!sessions[id]) sessions[id] = { step: 0, clickTime: 0 };
+    res.json(sessions[id]);
 });
 
-// Passo 1: Marca o tempo inicial para evitar Bypass
+// Marca o tempo de ida para a missão
 app.get('/api/start', (req, res) => {
     const { id } = req.query;
-    if (!sessions[id]) sessions[id] = { step: 0 };
-    
-    sessions[id].lastClick = Date.now(); // Salva o exato milissegundo do clique
+    if (sessions[id]) sessions[id].clickTime = Date.now();
     res.json({ success: true });
 });
 
-// Passo 2: Valida se ele voltou do Linkvertise com a missão feita
+// Verifica a volta do Linkvertise (Anti-Bypass de 15s)
 app.get('/api/verify_mission', (req, res) => {
     const { id, mission } = req.query;
     const session = sessions[id];
+    const m = parseInt(mission);
 
-    if (!session) return res.json({ error: "Sessão inválida. Atualize a página." });
-
-    // ANTI-BYPASS: Verifica se passou pelo menos 15 segundos desde o clique
-    const timePassed = Date.now() - (session.lastClick || 0);
-    if (timePassed < 15000) { 
-        return res.json({ error: "Você foi rápido demais! Pare de usar Bypassers e veja os anúncios corretamente." });
-    }
-
-    // Avança as missões
-    if (mission == 1 && session.step == 0) session.step = 1;
-    if (mission == 2 && session.step == 1) session.step = 2;
-    if (mission == 3 && session.step == 2) {
-        session.step = 3;
-        
-        // Gera a Chave de 48h Criptografada (Ex: AK74-8A2F9B)
-        const newKey = "AK74-" + crypto.randomBytes(3).toString('hex').toUpperCase();
-        session.key = newKey;
-        
-        // Salva a chave para deletar em exatas 48 horas
-        activeKeys[newKey] = Date.now() + (48 * 60 * 60 * 1000);
-    }
+    if (!session) return res.json({ error: "Sessão inválida!" });
+    if (session.step !== m - 1) return res.json({ error: "Você pulou uma missão ou tentou burlar!" });
     
+    // Bloqueia se voltar rápido demais (menos de 15s)
+    if (Date.now() - session.clickTime < 15000) return res.json({ error: "bypass_detected" });
+
+    session.step = m; // Avança o progresso (1, 2 ou 3)
     res.json({ success: true });
 });
 
-// Passo 3: Mostra o status atual para o site se atualizar sozinho
-app.get('/api/status', (req, res) => {
-    const { id } = req.query;
-    const session = sessions[id] || { step: 0 };
-    res.json(session);
-});
+// --- BUSCA AVATAR ROBLOX ---
+app.get('/api/roblox_info', async (req, res) => {
+    const { query, type } = req.query; 
+    try {
+        let userId = query;
+        let username = query;
 
-// Passo 4: Onde o Script do Roblox bate para checar a chave
-app.get('/api/check_key', (req, res) => {
-    const { key } = req.query;
-    const expireTime = activeKeys[key];
-
-    if (expireTime) {
-        if (Date.now() > expireTime) {
-            delete activeKeys[key]; // Deleta a chave instantaneamente se passou de 48h
-            return res.json({ valid: false, message: "Chave Expirada. Gere outra no site." });
+        if (type === 'username') {
+            const idRes = await fetch('https://users.roblox.com/v1/usernames/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usernames: [query], excludeBannedUsers: false })
+            });
+            const idData = await idRes.json();
+            if (!idData.data || idData.data.length === 0) return res.json({ error: "Usuário não encontrado!" });
+            userId = idData.data[0].id;
+            username = idData.data[0].name;
+        } else {
+            const nameRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+            if (!nameRes.ok) return res.json({ error: "ID inválido!" });
+            const nameData = await nameRes.json();
+            username = nameData.name;
         }
-        return res.json({ valid: true, message: "Acesso Liberado!" });
+
+        const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
+        const avatarData = await avatarRes.json();
+        const avatarUrl = avatarData.data[0].imageUrl;
+
+        res.json({ success: true, id: userId, username: username, avatar: avatarUrl });
+    } catch (err) {
+        res.json({ error: "Erro ao consultar a API do Roblox." });
     }
-    return res.json({ valid: false, message: "Chave Inválida." });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor Ak-74 Hub rodando na porta ${PORT}`));
+// --- WHITELIST (48 HORAS) ---
+app.get('/api/whitelist_add', (req, res) => {
+    const { id, session_id } = req.query;
+    // Exige que o step seja 3 (todas as missões concluídas)
+    if (!sessions[session_id] || sessions[session_id].step < 3) {
+        return res.json({ error: "Você não concluiu todas as 3 missões." });
+    }
+    
+    whitelist[id] = Date.now() + KEY_DURATION_48H;
+    res.json({ success: true });
+});
+
+app.get('/api/check_whitelist', (req, res) => {
+    const { id } = req.query;
+    const expireTime = whitelist[id];
+    
+    if (expireTime && Date.now() < expireTime) {
+        return res.json({ valid: true });
+    }
+    if (expireTime) delete whitelist[id];
+    res.json({ valid: false, error: "Acesso expirado ou não encontrado." });
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Servidor 48h rodando na porta ${PORT}`));
