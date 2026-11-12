@@ -3,140 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ak-74 Hub | Key System</title>
+    <title>Ak-74 Hub | Acesso 48h</title>
     <style>
-        body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: #161b22;
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            box-shadow: 0 0 20px rgba(0, 200, 255, 0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
+        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .container { background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #30363d; box-shadow: 0 0 20px rgba(0, 200, 255, 0.1); max-width: 420px; width: 90%; }
         h1 { color: #58a6ff; margin-bottom: 5px; }
-        p { color: #8b949e; font-size: 14px; margin-bottom: 30px; }
-        .mission-btn {
-            background: #238636;
-            color: white;
-            border: none;
-            padding: 15px;
-            width: 100%;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 15px;
-            transition: 0.3s;
-        }
-        .mission-btn:hover { background: #2ea043; }
-        .mission-btn:disabled {
-            background: #21262d;
-            color: #484f58;
-            cursor: not-allowed;
-        }
-        .key-box {
-            display: none;
-            background: #0d1117;
-            border: 1px solid #58a6ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .key-text {
-            color: #58a6ff;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
+        p { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
+        .btn { background: #238636; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
+        .btn:hover { background: #2ea043; }
+        .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+        .btn-red { background: #da3633; margin-top: 10px; }
+        .btn-red:hover { background: #f85149; }
+        .input-box { width: 100%; padding: 12px; background: #0d1117; color: white; border: 1px solid #58a6ff; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px; }
+        .avatar-img { border-radius: 50%; border: 3px solid #58a6ff; margin: 15px 0; width: 120px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Ak-74 Hub</h1>
-    <p>Complete as missões para gerar sua Key de 48 Horas</p>
+    
+    <!-- TELA 1: AS 3 MISSÕES -->
+    <div id="screen-missions" class="screen active">
+        <p>Complete as 3 etapas para liberar seu acesso (48 Horas)</p>
+        <button id="btn1" class="btn" onclick="startMission(1, 'https://link-hub.net/5893999/Kh4I820Lp6e0')">Missão 1/3 (Pendente)</button>
+        <button id="btn2" class="btn" onclick="startMission(2, 'https://link-center.net/5893999/S2uwn8sVi1HP')" disabled>Missão 2/3 (Bloqueada)</button>
+        <button id="btn3" class="btn" onclick="startMission(3, 'https://direct-link.net/5893999/cwI0ubA8aUWN')" disabled>Missão 3/3 (Bloqueada)</button>
+    </div>
 
-    <!-- Botões integrados com os seus Links do Linkvertise -->
-    <button id="btn1" class="mission-btn" onclick="startMission(1, 'https://link-hub.net/5893999/Kh4I820Lp6e0')">Missão 1 (Pendente)</button>
-    <button id="btn2" class="mission-btn" onclick="startMission(2, 'https://link-center.net/5893999/S2uwn8sVi1HP')" disabled>Missão 2 (Bloqueada)</button>
-    <button id="btn3" class="mission-btn" onclick="startMission(3, 'https://direct-link.net/5893999/cwI0ubA8aUWN')" disabled>Missão 3 (Bloqueada)</button>
+    <!-- TELA 2: BUSCA ROBLOX -->
+    <div id="screen-search" class="screen">
+        <p style="color: #58a6ff; font-weight: bold;">Missões Concluídas!</p>
+        <p>Vincule sua conta do Roblox para liberar a Whitelist.</p>
+        <input type="text" id="inputId" class="input-box" placeholder="Opção Colocar ID (garante 100% de sucesso)">
+        <button class="btn" onclick="searchRoblox('id')">Buscar por ID</button>
+        <hr style="border-color: #30363d; margin: 20px 0;">
+        <input type="text" id="inputUser" class="input-box" placeholder="Opção colocar Username (não garante 100% de sucesso)">
+        <button class="btn" onclick="searchRoblox('username')">Buscar por Username</button>
+    </div>
 
-    <div id="keyContainer" class="key-box">
-        <p style="margin-bottom: 10px; color: white;">Sua Key (Válida por 48h):</p>
-        <div class="key-text" id="finalKey">GERANDO...</div>
+    <!-- TELA 3: CONFIRMAÇÃO DA FOTO -->
+    <div id="screen-confirm" class="screen">
+        <p>Essa é a sua conta?</p>
+        <h2 id="robloxName" style="margin: 0; color: white;">...</h2>
+        <img id="robloxAvatar" class="avatar-img" src="" alt="Avatar">
+        <button class="btn" onclick="grantAccess()">Sou eu! Liberar acesso!<br><span style="font-size:12px;">It's me! Grant access!</span></button>
+        <button class="btn btn-red" onclick="showScreen('screen-search')">Esse não sou eu. Mudar nickname...<br><span style="font-size:12px;">That's not me...</span></button>
+    </div>
+
+    <!-- TELA 4: SUCESSO -->
+    <div id="screen-success" class="screen">
+        <h2 style="color: #3fb950;">Acesso Liberado!</h2>
+        <p>O seu ID está na Whitelist por 48 Horas. Pode usar o Admin no script!</p>
+        <p style="font-weight: bold; margin-top: 30px;">Fechar site?<br><span style="font-size:12px;">Access Granted! Close Site?</span></p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="window.close()">Sim / Yes</button>
+            <button class="btn btn-red" onclick="alert('Aba mantida aberta.')">Não / No</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Gera um ID único para o usuário e salva no navegador dele
-    let userId = localStorage.getItem('ak74_user_id');
-    if (!userId) {
-        userId = Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('ak74_user_id', userId);
-    }
+    let sessionId = localStorage.getItem('ak74_48h_session');
+    if (!sessionId) { sessionId = Math.random().toString(36).substring(2); localStorage.setItem('ak74_48h_session', sessionId); }
+    let currentUserRobloxId = null;
 
-    // Verifica se ele acabou de voltar do Linkvertise
+    // Checa retorno do Linkvertise via URL (?verify=X)
     const urlParams = new URLSearchParams(window.location.search);
     const verifyStep = urlParams.get('verify');
-
+    
     if (verifyStep) {
-        fetch(`/api/verify_mission?id=${userId}&mission=${verifyStep}`)
+        fetch(`/api/verify_mission?id=${sessionId}&mission=${verifyStep}`)
             .then(res => res.json())
             .then(data => {
-                if (data.error) alert(data.error);
-                window.location.href = "/"; // Limpa a URL
+                if (data.error) alert(data.error === "bypass_detected" ? "Bypass detectado! Aguarde os 15s da missão." : data.error);
+                window.location.href = "/"; // Limpa a URL e atualiza UI
             });
-    } else {
-        updateUI();
+    } else { 
+        updateUI(); 
+    }
+
+    function updateUI() {
+        fetch(`/api/status?id=${sessionId}`).then(res => res.json()).then(data => {
+            const step = data.step;
+            
+            if (step >= 1) {
+                document.getElementById('btn1').innerText = "Missão 1/3 (Concluída ✔)";
+                document.getElementById('btn1').disabled = true; document.getElementById('btn1').style.background = "#2ea043";
+                if (step < 2) { document.getElementById('btn2').disabled = false; document.getElementById('btn2').innerText = "Missão 2/3 (Pendente)"; }
+            }
+            if (step >= 2) {
+                document.getElementById('btn2').innerText = "Missão 2/3 (Concluída ✔)";
+                document.getElementById('btn2').disabled = true; document.getElementById('btn2').style.background = "#2ea043";
+                if (step < 3) { document.getElementById('btn3').disabled = false; document.getElementById('btn3').innerText = "Missão 3/3 (Pendente)"; }
+            }
+            if (step >= 3) {
+                document.getElementById('btn3').innerText = "Missão 3/3 (Concluída ✔)";
+                document.getElementById('btn3').disabled = true; document.getElementById('btn3').style.background = "#2ea043";
+                showScreen('screen-search');
+            }
+        });
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
     }
 
     function startMission(missionNum, linkUrl) {
-        // Inicia o cronômetro anti-bypass no servidor antes de abrir o link
-        fetch(`/api/start?id=${userId}`).then(() => {
+        fetch(`/api/start?id=${sessionId}`).then(() => {
             window.open(linkUrl, '_blank');
         });
     }
 
-    function updateUI() {
-        fetch(`/api/status?id=${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                const step = data.step;
-                
-                if (step >= 1) {
-                    document.getElementById('btn1').innerText = "Missão 1 (Concluída ✔)";
-                    document.getElementById('btn1').disabled = true;
-                    document.getElementById('btn2').disabled = false;
-                    document.getElementById('btn2').innerText = "Missão 2 (Pendente)";
-                }
-                if (step >= 2) {
-                    document.getElementById('btn2').innerText = "Missão 2 (Concluída ✔)";
-                    document.getElementById('btn2').disabled = true;
-                    document.getElementById('btn3').disabled = false;
-                    document.getElementById('btn3').innerText = "Missão 3 (Pendente)";
-                }
-                if (step >= 3) {
-                    document.getElementById('btn3').innerText = "Missão 3 (Concluída ✔)";
-                    document.getElementById('btn3').disabled = true;
-                    document.getElementById('keyContainer').style.display = "block";
-                    document.getElementById('finalKey').innerText = data.key;
-                }
-            });
+    function searchRoblox(type) {
+        const query = type === 'id' ? document.getElementById('inputId').value : document.getElementById('inputUser').value;
+        if (!query) return;
+        
+        fetch(`/api/roblox_info?query=${query}&type=${type}`).then(res => res.json()).then(data => {
+            if (data.error) return alert(data.error);
+            currentUserRobloxId = data.id;
+            document.getElementById('robloxName').innerText = data.username;
+            document.getElementById('robloxAvatar').src = data.avatar;
+            showScreen('screen-confirm');
+        });
+    }
+
+    function grantAccess() {
+        fetch(`/api/whitelist_add?id=${currentUserRobloxId}&session_id=${sessionId}`).then(res => res.json()).then(data => {
+            if (data.success) showScreen('screen-success');
+            else alert(data.error);
+        });
     }
 </script>
-
 </body>
 </html>
